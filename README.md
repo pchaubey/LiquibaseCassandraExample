@@ -1,1 +1,2 @@
 # LiquibaseCassandraExample
+# Coming soon
