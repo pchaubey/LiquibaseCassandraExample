@@ -15,6 +15,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.Properties;
 
 @Component
 @Profile({"local-liquibase"})
@@ -32,25 +33,12 @@ public class LiquibaseRunner {
             var username = environment.getRequiredProperty("spring.liquibase.username");
             var password = environment.getRequiredProperty("spring.liquibase.password");
 
-            //SSL properties for liquibase connection
-            String trustStorePath = getAbsolutePath(environment.getProperty("server.ssl.trust-store"));
-            if (trustStorePath != null) {
-                System.setProperty("javax.net.ssl.trustStore", trustStorePath);
-            }
-            String trustStorePassword = environment.getProperty("server.ssl.trust-store-password");
-            if (trustStorePassword != null) {
-                System.setProperty("javax.net.ssl.trustStorePassword", trustStorePassword);
-            }
-            String keyStorePath = getAbsolutePath(environment.getProperty("server.ssl.key-store"));
-            if (keyStorePath != null) {
-                System.setProperty("javax.net.ssl.keyStore", keyStorePath);
-            }
-            String keyStorePassword = environment.getProperty("server.ssl.key-store-password");
-            if (keyStorePassword != null) {
-                System.setProperty("javax.net.ssl.keyStorePassword", keyStorePassword);
-            }
+            Properties properties = new Properties();
+            properties.setProperty("user", username);
+            properties.setProperty("password", password);
+            properties.setProperty("sslEngineFactory", LiquibaseSSLEngineFactory.class.getCanonicalName());
 
-            try (Connection conn = DriverManager.getConnection(url, username, password)) {
+            try (Connection conn = DriverManager.getConnection(url, properties)) {
                 Database database = DatabaseFactory.getInstance()
                         .findCorrectDatabaseImplementation(new JdbcConnection(conn));
 
